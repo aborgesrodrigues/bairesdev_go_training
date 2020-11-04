@@ -1,15 +1,6 @@
 package main
 
-import (
-	"testing"
-)
-
-func IntMin(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
+import "testing"
 
 func TestIntMin(t *testing.T) {
 	if got := IntMin(2, 1); got != 1 {

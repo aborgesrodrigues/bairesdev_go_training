@@ -4,14 +4,7 @@ import (
 	"testing"
 )
 
-func IntMin(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func TestIntMin(t *testing.T) {
+func TestMultipleIntMin(t *testing.T) {
 	tests := []struct {
 		a      int
 		b      int
