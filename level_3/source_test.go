@@ -6,8 +6,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type User struct {
-	name string
+func TestIntMin(t *testing.T) {
+	if got := IntMin(2, 1); got != 1 {
+		t.Errorf("IntMin(2, 1) = 1 want 1")
+	}
+}
+
+func TestMultipleIntMin(t *testing.T) {
+	tests := []struct {
+		a      int
+		b      int
+		result int
+	}{
+		{a: 1, b: 2, result: 1},
+		{a: 2, b: 1, result: 1},
+		{a: 3, b: 7, result: 3},
+		{a: 4, b: 2, result: 2},
+	}
+	for _, tt := range tests {
+		if got := IntMin(tt.a, tt.b); got != tt.result {
+			t.Errorf("IntMin(%v, %v) = %v, want %v", tt.a, tt.b, got, tt.result)
+		}
+	}
 }
 
 func TestDifferentAssertsIntMin(t *testing.T) {
