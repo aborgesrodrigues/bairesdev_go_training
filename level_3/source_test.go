@@ -30,7 +30,7 @@ func TestMultipleIntMin(t *testing.T) {
 	}
 }
 
-func TestDifferentAssertsIntMin(t *testing.T) {
+func TestDifferentAsserts(t *testing.T) {
 	// assert equality
 	assert.Equal(t, 123, 123, "they should be equal")
 
