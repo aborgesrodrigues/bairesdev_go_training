@@ -25,19 +25,20 @@ type Namer interface {
 	Name() string
 }
 
-func printName(n Namer) {
+func GetName(n Namer) string {
 	switch n.(type) {
 	case *User:
-		fmt.Println("User", n.Name())
+		return "User " + n.Name()
 	case *Customer:
-		fmt.Println("Customer", n.Name())
+		return "Customer " + n.Name()
 	}
+	return ""
 }
 
 func main() {
 	u := &User{"Matt", "Aimonetti"}
 	c := &Customer{42, "Francesc"}
 
-	printName(u)
-	printName(c)
+	fmt.Println(GetName(u))
+	fmt.Println(GetName(c))
 }

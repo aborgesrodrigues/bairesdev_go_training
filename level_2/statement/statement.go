@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type books struct {
 	name  string
@@ -13,16 +15,18 @@ type games struct {
 }
 
 type Product interface {
-	print()
+	string() string
 	applyDescount(float32)
 }
 
-func (b *books) print() {
-	fmt.Println("Book", b.name, b.price)
+func (b *books) string() string {
+	return fmt.Sprintf("Book %s %f", b.name, b.price)
+	//"Book " + b.name + " " + strconv.FormatFloat(float64(b.price), 'E', -1, 64)
 }
 
-func (g *games) print() {
-	fmt.Println("Game", g.name, g.price)
+func (g *games) string() string {
+	return fmt.Sprintf("Game %s %f", g.name, g.price)
+	//"Game " + g.name + " " + strconv.FormatFloat(float64(g.price), 'E', -1, 64)
 }
 
 func (b *books) applyDescount(percentDescount float32) {
@@ -41,7 +45,7 @@ func applyDescount(p Product) {
 		p.applyDescount(20)
 	}
 
-	p.print()
+	fmt.Println(p.string())
 }
 
 func main() {
