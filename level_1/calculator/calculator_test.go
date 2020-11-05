@@ -19,6 +19,12 @@ func TestCalculatorSubtract(t *testing.T) {
 	assert.Equal(t, c.subtract(40, 25), float32(15), "they should be equal")
 }
 
+func TestCalculatorMultiply(t *testing.T) {
+	c := calculator{}
+
+	assert.Equal(t, c.multiply(3, 6), float32(18), "they should be equal")
+}
+
 func TestCalculatorDivide(t *testing.T) {
 	c := calculator{}
 
