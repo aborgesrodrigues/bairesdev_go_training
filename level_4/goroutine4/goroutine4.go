@@ -3,25 +3,28 @@ package main
 import (
 	"fmt"
 	"sync"
-	"time"
 )
 
 func increase() {
+	var wg sync.WaitGroup
 	var mutex = &sync.Mutex{}
-	total := 0
+	var total int
+
 	for r := 0; r < 100; r++ {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
+
 			mutex.Lock()
 			total++
-			fmt.Println(total)
 			mutex.Unlock()
-			// Wait a bit between reads.
-			time.Sleep(time.Millisecond)
+
+			fmt.Println(total)
 		}()
 	}
+	wg.Wait()
 }
 
 func main() {
-	// Doubt about the example https://tour.golang.org/methods/14
 	increase()
 }
