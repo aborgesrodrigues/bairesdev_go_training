@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<title>shape_interfaces: Go Coverage Report</title>
+		<title>statement: Go Coverage Report</title>
 		<style>
 			body {
 				background: black;
@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_2/shape_interfaces/shape_interfaces.go (28.6%)</option>
+				<option value="file0">/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_1/statement/statement.go (42.9%)</option>
 				
 				</select>
 			</div>
@@ -71,60 +71,53 @@
 		
 		<pre class="file" id="file0" style="display: none">package main
 
-import (
-        "fmt"
-        "math"
-)
+import "fmt"
 
-type Rectangle struct {
-        w float32
-        h float32
+type Stack struct {
+        items []int
 }
 
-type Circle struct {
-        r float32
+func (s *Stack) push(i int) <span class="cov8" title="1">{
+        s.items = append(s.items, i)
+}</span>
+
+func (s *Stack) pop() int <span class="cov8" title="1">{
+        poped := s.items[len(s.items)-1]
+        s.items = s.items[0 : len(s.items)-1]
+
+        return poped
+}</span>
+
+func (s *Stack) peek(i int) int <span class="cov8" title="1">{
+        for index, item := range s.items </span><span class="cov8" title="1">{
+                if item == i </span><span class="cov8" title="1">{
+                        return index
+                }</span>
+        }
+        <span class="cov8" title="1">return -1</span>
 }
 
-type Shape interface {
-        Area() float32
-        Perimeter() float32
-}
-
-func (c *Circle) Area() float32 <span class="cov8" title="1">{
-        return math.Pi * c.r * c.r
-}</span>
-
-func (c *Circle) Perimeter() float32 <span class="cov8" title="1">{
-        return 2 * math.Pi * c.r
-}</span>
-
-func (r *Rectangle) Area() float32 <span class="cov8" title="1">{
-        return r.w * r.h
-}</span>
-
-func (r *Rectangle) Perimeter() float32 <span class="cov8" title="1">{
-        return (2 * r.w) + (2 * r.h)
-}</span>
-
-func run(s Shape) <span class="cov0" title="0">{
-        fmt.Println(s.Area())
-        fmt.Println(s.Perimeter())
+func (s *Stack) isEmpty() bool <span class="cov8" title="1">{
+        return len(s.items) == 0
 }</span>
 
 func main() <span class="cov0" title="0">{
-        var shapes = make([]Shape, 0)
-        fmt.Println(shapes)
+        stack := Stack{items: make([]int, 0)}
+        fmt.Println(stack.isEmpty())
+        stack.push(1)
+        stack.push(2)
+        stack.push(3)
 
-        c1 := &amp;Circle{r: 3}
-        shapes = append(shapes, c1)
+        fmt.Println(stack)
+        fmt.Println("Removed ", stack.pop())
 
-        r1 := &amp;Rectangle{w: 3, h: 4}
-        shapes = append(shapes, r1)
+        stack.push(4)
+        stack.push(5)
+        fmt.Println(stack)
 
-        for _, shape := range shapes </span><span class="cov0" title="0">{
-                run(shape)
-        }</span>
-}
+        fmt.Println("Item 4", "Index", stack.peek(4))
+        fmt.Println(stack.isEmpty())
+}</span>
 </pre>
 		
 		</div>

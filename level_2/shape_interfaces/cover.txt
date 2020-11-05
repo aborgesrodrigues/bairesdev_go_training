@@ -1,8 +1,0 @@
-mode: set
-/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_2/shape_interfaces/shape_interfaces.go:22.33,24.2 1 1
-/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_2/shape_interfaces/shape_interfaces.go:26.38,28.2 1 1
-/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_2/shape_interfaces/shape_interfaces.go:30.36,32.2 1 1
-/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_2/shape_interfaces/shape_interfaces.go:34.41,36.2 1 1
-/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_2/shape_interfaces/shape_interfaces.go:38.19,41.2 2 0
-/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_2/shape_interfaces/shape_interfaces.go:43.13,53.31 7 0
-/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_2/shape_interfaces/shape_interfaces.go:53.31,55.3 1 0
