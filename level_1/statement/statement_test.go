@@ -27,6 +27,7 @@ func TestPeek(t *testing.T) {
 	stack := Stack{items: []int{1, 2, 3}}
 
 	assert.Equal(t, stack.peek(2), 1, "they should be equal")
+	assert.Equal(t, stack.peek(4), -1, "they should be equal")
 }
 
 func TestIsEmpty(t *testing.T) {

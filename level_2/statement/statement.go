@@ -15,16 +15,16 @@ type games struct {
 }
 
 type Product interface {
-	string() string
+	String() string
 	applyDescount(float32)
 }
 
-func (b *books) string() string {
+func (b *books) String() string {
 	return fmt.Sprintf("Book %s %f", b.name, b.price)
 	//"Book " + b.name + " " + strconv.FormatFloat(float64(b.price), 'E', -1, 64)
 }
 
-func (g *games) string() string {
+func (g *games) String() string {
 	return fmt.Sprintf("Game %s %f", g.name, g.price)
 	//"Game " + g.name + " " + strconv.FormatFloat(float64(g.price), 'E', -1, 64)
 }
@@ -45,7 +45,7 @@ func applyDescount(p Product) {
 		p.applyDescount(20)
 	}
 
-	fmt.Println(p.string())
+	fmt.Println(p)
 }
 
 func main() {

@@ -32,7 +32,7 @@ func (r *Rectangle) Area() float32 {
 }
 
 func (r *Rectangle) Perimeter() float32 {
-	return (2* r.w) + (2 * r.h)
+	return (2 * r.w) + (2 * r.h)
 }
 
 func run(s Shape) {
@@ -43,14 +43,13 @@ func run(s Shape) {
 func main() {
 	var shapes = make([]Shape, 0)
 	fmt.Println(shapes)
-	
-	// Why do I need to get the reference value
+
 	c1 := &Circle{r: 3}
 	shapes = append(shapes, c1)
-	
+
 	r1 := &Rectangle{w: 3, h: 4}
 	shapes = append(shapes, r1)
-	
+
 	for _, shape := range shapes {
 		run(shape)
 	}

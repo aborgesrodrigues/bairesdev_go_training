@@ -21,7 +21,7 @@ func TestString(t *testing.T) {
 	b1 := &books{name: "Book 1", price: 10}
 	g1 := &games{name: "Game 1", price: 100}
 
-	assert.Equal(t, b1.string(), "Book Book 1 10.000000", "they should be equal")
+	assert.Equal(t, b1.String(), "Book Book 1 10.000000", "they should be equal")
 
-	assert.Equal(t, g1.string(), "Game Game 1 100.000000", "they should be equal")
+	assert.Equal(t, g1.String(), "Game Game 1 100.000000", "they should be equal")
 }
