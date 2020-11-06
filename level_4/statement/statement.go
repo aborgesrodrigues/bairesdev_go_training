@@ -18,7 +18,6 @@ func findSusbstring(ch chan string, wg *sync.WaitGroup, substring string, partia
 
 	for _, sub := range partialStrings {
 		if strings.Contains(sub, substring) {
-			fmt.Println("encontrou", sub)
 			ch <- sub
 		}
 	}
