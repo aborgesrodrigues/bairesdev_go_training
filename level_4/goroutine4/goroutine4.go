@@ -22,6 +22,7 @@ func increase() {
 			fmt.Println(total)
 		}()
 	}
+
 	wg.Wait()
 }
 
