@@ -8,9 +8,11 @@ import (
 
 var allStrings []string = []string{
 	"alessandro",
-	"borges",
+	"borgess",
 	"string1",
 	"aaboss",
+	"string2",
+	"aaboss222",
 }
 
 func findSusbstring(ch chan string, wg *sync.WaitGroup, substring string, partialStrings []string) {
@@ -23,7 +25,8 @@ func findSusbstring(ch chan string, wg *sync.WaitGroup, substring string, partia
 	}
 }
 
-func checkChannel(ch chan string) {
+func checkChannel(ch chan string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	for ch1 := range ch {
 		fmt.Println(ch1)
 	}
@@ -31,14 +34,19 @@ func checkChannel(ch chan string) {
 
 func main() {
 	var wg sync.WaitGroup
-	ch := make(chan string)
-	var findString = "bo"
+	var wg2 sync.WaitGroup
+	ch := make(chan string, 6)
+	var findString = "ss"
 
-	wg.Add(2)
-	go findSusbstring(ch, &wg, findString, allStrings[:len(allStrings)/2])
-	go findSusbstring(ch, &wg, findString, allStrings[len(allStrings)/2:])
+	wg.Add(3)
 
-	go checkChannel(ch)
+	go findSusbstring(ch, &wg, findString, allStrings[:2])
+	go findSusbstring(ch, &wg, findString, allStrings[2:4])
+	go findSusbstring(ch, &wg, findString, allStrings[4:])
+
+	wg2.Add(1)
+	go checkChannel(ch, &wg2)
 	wg.Wait()
 	close(ch)
+	wg2.Wait()
 }
