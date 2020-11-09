@@ -25,7 +25,7 @@ type productInventory struct {
 
 type productInventoryPatch struct {
 	Product  *product `json:"product,omitempty"`
-	Quantity *int     `json:"quantity"`
+	Quantity int      `json:"quantity,omitempty"`
 }
 
 var inventory []productInventory
@@ -35,12 +35,23 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		//json.NewEncoder(w).Encode("Kindly enter data with the Product title and description only in order to update")
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
 		return
 	}
 
-	json.Unmarshal(reqBody, &newInventory)
+	error := json.Unmarshal(reqBody, &newInventory)
+
+	if error != nil {
+		fmt.Fprintf(w, error.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else if newInventory.Product.ID == 0 || newInventory.Product.Code == "" || newInventory.Product.Name == "" {
+		json.NewEncoder(w).Encode(newInventory)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	inventory = append(inventory, newInventory)
 	w.WriteHeader(http.StatusCreated)
 
@@ -51,7 +62,7 @@ func getOneProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
 
 	for _, singleInventoryProduct := range inventory {
-		intProductID, _ := strconv.ParseInt(ProductID, 10, 64)
+		intProductID, _ := strconv.Atoi(ProductID)
 		if singleInventoryProduct.Product.ID == int(intProductID) {
 			json.NewEncoder(w).Encode(singleInventoryProduct)
 			break
@@ -72,7 +83,16 @@ func updateProduct(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
 		return
 	}
-	json.Unmarshal(reqBody, &updatedInventory)
+	error := json.Unmarshal(reqBody, &updatedInventory)
+	if error != nil {
+		fmt.Fprintf(w, error.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else if updatedInventory.Product.ID == 0 || updatedInventory.Product.Code == "" || updatedInventory.Product.Name == "" {
+		json.NewEncoder(w).Encode(updatedInventory)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	intProductID, _ := strconv.Atoi(ProductID)
 
@@ -91,8 +111,9 @@ func updateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func updateProductPatch(w http.ResponseWriter, r *http.Request) {
+func updatePatchProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
+	intProductID, _ := strconv.Atoi(ProductID)
 	var updatedInventory productInventory
 
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -100,10 +121,18 @@ func updateProductPatch(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
 		return
 	}
-	json.Unmarshal(reqBody, &updatedInventory)
+	error := json.Unmarshal(reqBody, &updatedInventory)
+	if error != nil {
+		fmt.Fprintf(w, error.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else if updatedInventory.Product.ID == 0 || updatedInventory.Product.Code == "" || updatedInventory.Product.Name == "" {
+		json.NewEncoder(w).Encode(updatedInventory)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	for i, singleInventoryProduct := range inventory {
-		intProductID, _ := strconv.Atoi(ProductID) //strconv.ParseInt(ProductID, 10, 64)
 		if singleInventoryProduct.Product.ID == int(intProductID) {
 
 			//Check if the attributes of the product was changed
@@ -128,9 +157,9 @@ func updateProductPatch(w http.ResponseWriter, r *http.Request) {
 
 func deleteProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
+	intProductID, _ := strconv.Atoi(ProductID)
 
 	for i, singleInventoryProduct := range inventory {
-		intProductID, _ := strconv.ParseInt(ProductID, 10, 64)
 		if singleInventoryProduct.Product.ID == int(intProductID) {
 			inventory = append(inventory[:i], inventory[i+1:]...)
 			fmt.Fprintf(w, "The Product with ID %v has been deleted successfully", ProductID)
@@ -144,7 +173,7 @@ func main() {
 	router.HandleFunc("/inventory", createProduct).Methods("POST")
 	router.HandleFunc("/inventory", getAllProducts).Methods("GET")
 	router.HandleFunc("/inventory/{id}", getOneProduct).Methods("GET")
-	//router.HandleFunc("/inventory/{id}", updateProductPatch).Methods("PATCH")
+	//router.HandleFunc("/inventory/{id}", updatePatchProduct).Methods("PATCH")
 	router.HandleFunc("/inventory/{id}", updateProduct).Methods("PUT")
 	router.HandleFunc("/inventory/{id}", deleteProduct).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":8080", router))

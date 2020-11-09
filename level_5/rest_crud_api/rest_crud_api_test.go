@@ -115,37 +115,54 @@ func TestGetAllProducts(t *testing.T) {
 }
 
 func TestDeleteProduct(t *testing.T) {
+	fillInventory()
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/inventory/{id}", deleteProduct).Methods("DELETE")
 
-	ts := httptest.NewServer(router)
-	defer ts.Close()
-
-	req := httptest.NewRequest("DELETE", ts.URL+"/inventory/1/", nil)
-
-	//q := req.URL.Query()
-	//q.Add("id", "1")
-	//req.URL.RawQuery = q.Encode()
-
-	res := httptest.NewRecorder()
+	server := httptest.NewServer(router)
+	//server := NewServer( ...) // criar os handlers
+	req := httptest.NewRequest("DELETE", server.URL+"/inventory/1", nil)
+	w := httptest.NewRecorder()
+	//server.Handler.ServeHTTP(w, req)
 	handler := http.HandlerFunc(deleteProduct)
+	handler.ServeHTTP(w, req)
+	resp := w.Result()
+	_, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	handler.ServeHTTP(res, req)
+	// router := mux.NewRouter().StrictSlash(true)
+	// router.HandleFunc("/inventory/{id}", deleteProduct).Methods("DELETE")
 
-	fillInventory()
+	// ts := httptest.NewServer(router)
+	// defer ts.Close()
 
-	//res, err := http.Get(ts.URL + "/inventory/1")
-	//defer res.Body.Close()
+	// req := httptest.NewRequest("DELETE", ts.URL+"/inventory/1", nil)
 
-	var newInventory productInventory
-	var oldInventory productInventory = inventory[0]
-	resBody, err := ioutil.ReadAll(res.Body)
-	json.Unmarshal(resBody, &newInventory)
+	// q := req.URL.Query()
+	// q.Add("id", "1")
+	// req.URL.RawQuery = q.Encode()
 
-	assert.Nil(t, err)
-	assert.Equal(t, res.Code, http.StatusOK, "they should be equal")
-	assert.Equal(t, newInventory, oldInventory, "they should be equal")
-	assert.Equal(t, len(inventory), 1, "they should be equal")
+	// res := httptest.NewRecorder()
+	// handler := http.HandlerFunc(deleteProduct)
+
+	// handler.ServeHTTP(res, req)
+
+	// fillInventory()
+
+	// //res, err := http.Get(ts.URL + "/inventory/1")
+	// //defer res.Body.Close()
+
+	// var newInventory productInventory
+	// var oldInventory productInventory = inventory[0]
+	// resBody, err := ioutil.ReadAll(res.Body)
+	// json.Unmarshal(resBody, &newInventory)
+
+	// assert.Nil(t, err)
+	// assert.Equal(t, res.Code, http.StatusOK, "they should be equal")
+	// assert.Equal(t, newInventory, oldInventory, "they should be equal")
+	// assert.Equal(t, len(inventory), 1, "they should be equal")
 
 }
 
@@ -197,6 +214,5 @@ func TestUpdateProduct(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, res.Code, http.StatusOK, "they should be equal")
 	assert.Equal(t, newInventory, oldInventory, "they should be equal")
-	assert.Equal(t, len(inventory), 1, "they should be equal")
 
 }
