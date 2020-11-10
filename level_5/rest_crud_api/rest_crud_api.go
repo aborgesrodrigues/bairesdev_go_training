@@ -17,12 +17,10 @@ type product struct {
 	Name  string  `json:"name"`
 	Price float64 `json:"price"`
 }
-
 type productInventory struct {
 	Product  product `json:"product"`
 	Quantity int     `json:"quantity"`
 }
-
 type productInventoryPatch struct {
 	Product  *product `json:"product,omitempty"`
 	Quantity int      `json:"quantity,omitempty"`
@@ -32,35 +30,33 @@ var inventory []productInventory
 
 func createProduct(w http.ResponseWriter, r *http.Request) {
 	var newInventory productInventory
-
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
 		return
 	}
-
-	error := json.Unmarshal(reqBody, &newInventory)
-
-	if error != nil {
-		fmt.Fprintf(w, error.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	} else if newInventory.Product.ID == 0 || newInventory.Product.Code == "" || newInventory.Product.Name == "" {
-		json.NewEncoder(w).Encode(newInventory)
+	err = json.Unmarshal(reqBody, &newInventory)
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	if newInventory.Product.ID == 0 ||
+		newInventory.Product.Code == "" ||
+		newInventory.Product.Name == "" ||
+		newInventory.Product.Price == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(newInventory)
+		return
+	}
 	inventory = append(inventory, newInventory)
 	w.WriteHeader(http.StatusCreated)
-
 	json.NewEncoder(w).Encode(newInventory)
 }
 
 func getOneProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
-
 	for _, singleInventoryProduct := range inventory {
 		intProductID, _ := strconv.Atoi(ProductID)
 		if singleInventoryProduct.Product.ID == int(intProductID) {
@@ -77,64 +73,57 @@ func getAllProducts(w http.ResponseWriter, r *http.Request) {
 func updateProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
 	var updatedInventory productInventory
-
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
 		return
 	}
-	error := json.Unmarshal(reqBody, &updatedInventory)
-	if error != nil {
-		fmt.Fprintf(w, error.Error())
+	err = json.Unmarshal(reqBody, &updatedInventory)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return
-	} else if updatedInventory.Product.ID == 0 || updatedInventory.Product.Code == "" || updatedInventory.Product.Name == "" {
-		json.NewEncoder(w).Encode(updatedInventory)
-		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, err.Error())
 		return
 	}
+	if updatedInventory.Product.ID == 0 ||
+		updatedInventory.Product.Code == "" ||
+		updatedInventory.Product.Name == "" ||
+		updatedInventory.Product.Price == 0 {
 
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(updatedInventory)
+		return
+	}
 	intProductID, _ := strconv.Atoi(ProductID)
-
 	if updatedInventory.Product.ID != intProductID {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(updatedInventory)
 		return
 	}
-
 	for i, singleInventoryProduct := range inventory {
 		if singleInventoryProduct.Product.ID == intProductID {
 			inventory[i] = updatedInventory
-			json.NewEncoder(w).Encode(singleInventoryProduct)
+			json.NewEncoder(w).Encode(updatedInventory)
 			break
 		}
 	}
 }
-
 func updatePatchProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
 	intProductID, _ := strconv.Atoi(ProductID)
 	var updatedInventory productInventory
-
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
 		return
 	}
-	error := json.Unmarshal(reqBody, &updatedInventory)
-	if error != nil {
-		fmt.Fprintf(w, error.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	} else if updatedInventory.Product.ID == 0 || updatedInventory.Product.Code == "" || updatedInventory.Product.Name == "" {
-		json.NewEncoder(w).Encode(updatedInventory)
+	err = json.Unmarshal(reqBody, &updatedInventory)
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	for i, singleInventoryProduct := range inventory {
 		if singleInventoryProduct.Product.ID == int(intProductID) {
-
 			//Check if the attributes of the product was changed
 			if updatedInventory.Product.Code != "" {
 				singleInventoryProduct.Product.Code = updatedInventory.Product.Code
@@ -154,11 +143,9 @@ func updatePatchProduct(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-
 func deleteProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
 	intProductID, _ := strconv.Atoi(ProductID)
-
 	for i, singleInventoryProduct := range inventory {
 		if singleInventoryProduct.Product.ID == int(intProductID) {
 			inventory = append(inventory[:i], inventory[i+1:]...)
@@ -167,13 +154,12 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/inventory", createProduct).Methods("POST")
 	router.HandleFunc("/inventory", getAllProducts).Methods("GET")
 	router.HandleFunc("/inventory/{id}", getOneProduct).Methods("GET")
-	//router.HandleFunc("/inventory/{id}", updatePatchProduct).Methods("PATCH")
+	router.HandleFunc("/patch_inventory/{id}", updatePatchProduct).Methods("PATCH")
 	router.HandleFunc("/inventory/{id}", updateProduct).Methods("PUT")
 	router.HandleFunc("/inventory/{id}", deleteProduct).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":8080", router))

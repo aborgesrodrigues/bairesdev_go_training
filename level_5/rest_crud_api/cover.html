@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>rest_crud_api: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_5/rest_crud_api/rest_crud_api.go (72.2%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "encoding/json"
+        "fmt"
+        "io/ioutil"
+        "log"
+        "net/http"
+        "strconv"
+
+        "github.com/gorilla/mux"
+)
+
+type product struct {
+        ID    int     `json:"id"`
+        Code  string  `json:"code"`
+        Name  string  `json:"name"`
+        Price float64 `json:"price"`
+}
+type productInventory struct {
+        Product  product `json:"product"`
+        Quantity int     `json:"quantity"`
+}
+type productInventoryPatch struct {
+        Product  *product `json:"product,omitempty"`
+        Quantity int      `json:"quantity,omitempty"`
+}
+
+var inventory []productInventory
+
+func createProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        var newInventory productInventory
+        reqBody, err := ioutil.ReadAll(r.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                w.WriteHeader(http.StatusBadRequest)
+                fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
+                return
+        }</span>
+        <span class="cov8" title="1">err = json.Unmarshal(reqBody, &amp;newInventory)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Fprintf(w, err.Error())
+                w.WriteHeader(http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov8" title="1">if newInventory.Product.ID == 0 ||
+                newInventory.Product.Code == "" ||
+                newInventory.Product.Name == "" ||
+                newInventory.Product.Price == 0 </span><span class="cov8" title="1">{
+                w.WriteHeader(http.StatusBadRequest)
+                json.NewEncoder(w).Encode(newInventory)
+                return
+        }</span>
+        <span class="cov8" title="1">inventory = append(inventory, newInventory)
+        w.WriteHeader(http.StatusCreated)
+        json.NewEncoder(w).Encode(newInventory)</span>
+}
+
+func getOneProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        ProductID := mux.Vars(r)["id"]
+        for _, singleInventoryProduct := range inventory </span><span class="cov8" title="1">{
+                intProductID, _ := strconv.Atoi(ProductID)
+                if singleInventoryProduct.Product.ID == int(intProductID) </span><span class="cov8" title="1">{
+                        json.NewEncoder(w).Encode(singleInventoryProduct)
+                        break</span>
+                }
+        }
+}
+
+func getAllProducts(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        json.NewEncoder(w).Encode(inventory)
+}</span>
+
+func updateProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        ProductID := mux.Vars(r)["id"]
+        var updatedInventory productInventory
+        reqBody, err := ioutil.ReadAll(r.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
+                return
+        }</span>
+        <span class="cov8" title="1">err = json.Unmarshal(reqBody, &amp;updatedInventory)
+        if err != nil </span><span class="cov0" title="0">{
+                w.WriteHeader(http.StatusBadRequest)
+                fmt.Fprintf(w, err.Error())
+                return
+        }</span>
+        <span class="cov8" title="1">if updatedInventory.Product.ID == 0 ||
+                updatedInventory.Product.Code == "" ||
+                updatedInventory.Product.Name == "" ||
+                updatedInventory.Product.Price == 0 </span><span class="cov8" title="1">{
+
+                w.WriteHeader(http.StatusBadRequest)
+                json.NewEncoder(w).Encode(updatedInventory)
+                return
+        }</span>
+        <span class="cov8" title="1">intProductID, _ := strconv.Atoi(ProductID)
+        if updatedInventory.Product.ID != intProductID </span><span class="cov8" title="1">{
+                w.WriteHeader(http.StatusBadRequest)
+                json.NewEncoder(w).Encode(updatedInventory)
+                return
+        }</span>
+        <span class="cov8" title="1">for i, singleInventoryProduct := range inventory </span><span class="cov8" title="1">{
+                if singleInventoryProduct.Product.ID == intProductID </span><span class="cov8" title="1">{
+                        inventory[i] = updatedInventory
+                        json.NewEncoder(w).Encode(updatedInventory)
+                        break</span>
+                }
+        }
+}
+func updatePatchProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        ProductID := mux.Vars(r)["id"]
+        intProductID, _ := strconv.Atoi(ProductID)
+        var updatedInventory productInventory
+        reqBody, err := ioutil.ReadAll(r.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
+                return
+        }</span>
+        <span class="cov8" title="1">err = json.Unmarshal(reqBody, &amp;updatedInventory)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Fprintf(w, err.Error())
+                w.WriteHeader(http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov8" title="1">for i, singleInventoryProduct := range inventory </span><span class="cov8" title="1">{
+                if singleInventoryProduct.Product.ID == int(intProductID) </span><span class="cov8" title="1">{
+                        //Check if the attributes of the product was changed
+                        if updatedInventory.Product.Code != "" </span><span class="cov8" title="1">{
+                                singleInventoryProduct.Product.Code = updatedInventory.Product.Code
+                        }</span>
+                        <span class="cov8" title="1">if updatedInventory.Product.Name != "" </span><span class="cov0" title="0">{
+                                singleInventoryProduct.Product.Name = updatedInventory.Product.Name
+                        }</span>
+                        <span class="cov8" title="1">if singleInventoryProduct.Product.Price != 0 </span><span class="cov8" title="1">{
+                                singleInventoryProduct.Product.Price = updatedInventory.Product.Price
+                        }</span>
+                        <span class="cov8" title="1">if updatedInventory.Quantity != 0 </span><span class="cov8" title="1">{
+                                singleInventoryProduct.Quantity = updatedInventory.Quantity
+                        }</span>
+                        <span class="cov8" title="1">inventory[i] = singleInventoryProduct
+                        json.NewEncoder(w).Encode(singleInventoryProduct)
+                        break</span>
+                }
+        }
+}
+func deleteProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        ProductID := mux.Vars(r)["id"]
+        intProductID, _ := strconv.Atoi(ProductID)
+        for i, singleInventoryProduct := range inventory </span><span class="cov8" title="1">{
+                if singleInventoryProduct.Product.ID == int(intProductID) </span><span class="cov8" title="1">{
+                        inventory = append(inventory[:i], inventory[i+1:]...)
+                        fmt.Fprintf(w, "The Product with ID %v has been deleted successfully", ProductID)
+                        break</span>
+                }
+        }
+}
+func main() <span class="cov0" title="0">{
+        router := mux.NewRouter().StrictSlash(true)
+        router.HandleFunc("/inventory", createProduct).Methods("POST")
+        router.HandleFunc("/inventory", getAllProducts).Methods("GET")
+        router.HandleFunc("/inventory/{id}", getOneProduct).Methods("GET")
+        router.HandleFunc("/patch_inventory/{id}", updatePatchProduct).Methods("PATCH")
+        router.HandleFunc("/inventory/{id}", updateProduct).Methods("PUT")
+        router.HandleFunc("/inventory/{id}", deleteProduct).Methods("DELETE")
+        log.Fatal(http.ListenAndServe(":8080", router))
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

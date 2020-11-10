@@ -39,11 +39,36 @@ func TestCreateProduct(t *testing.T) {
 	res, err := http.Post(ts.URL+"/inventory/", "application/json", strings.NewReader(string(data)))
 	defer res.Body.Close()
 
-	//fmt.Println(inventory, len(inventory), payload, strings.NewReader(payload))
 	assert.Nil(t, err)
 	assert.Equal(t, res.StatusCode, http.StatusCreated, "they should be equal")
 	assert.Equal(t, len(inventory), 1, "they should be equal")
 	assert.Equal(t, inventory[0].Product.ID, 1, "they should be equal")
+
+}
+
+func TestFailCreateProduct(t *testing.T) {
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/inventory/", createProduct).Methods("POST")
+
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	payload := productInventory{
+		Quantity: 1,
+	}
+
+	data, err := json.Marshal(payload)
+
+	if err != nil {
+		fmt.Println(err)
+
+	}
+	res, err := http.Post(ts.URL+"/inventory/", "application/json", strings.NewReader(string(data)))
+	defer res.Body.Close()
+
+	assert.Nil(t, err)
+	assert.Equal(t, res.StatusCode, http.StatusBadRequest, "they should be equal")
+	assert.Equal(t, len(inventory), 1, "they should be equal")
 
 }
 
@@ -117,102 +142,154 @@ func TestGetAllProducts(t *testing.T) {
 func TestDeleteProduct(t *testing.T) {
 	fillInventory()
 
+	// Create the router
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/inventory/{id}", deleteProduct).Methods("DELETE")
 
-	server := httptest.NewServer(router)
-	//server := NewServer( ...) // criar os handlers
-	req := httptest.NewRequest("DELETE", server.URL+"/inventory/1", nil)
-	w := httptest.NewRecorder()
-	//server.Handler.ServeHTTP(w, req)
-	handler := http.HandlerFunc(deleteProduct)
-	handler.ServeHTTP(w, req)
-	resp := w.Result()
-	_, err := ioutil.ReadAll(resp.Body)
+	// Create the request
+	req := httptest.NewRequest("DELETE", "/inventory/1", nil)
+	res := httptest.NewRecorder()
+	router.ServeHTTP(res, req)
+	resBody, err := ioutil.ReadAll(res.Body)
+
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	// router := mux.NewRouter().StrictSlash(true)
-	// router.HandleFunc("/inventory/{id}", deleteProduct).Methods("DELETE")
-
-	// ts := httptest.NewServer(router)
-	// defer ts.Close()
-
-	// req := httptest.NewRequest("DELETE", ts.URL+"/inventory/1", nil)
-
-	// q := req.URL.Query()
-	// q.Add("id", "1")
-	// req.URL.RawQuery = q.Encode()
-
-	// res := httptest.NewRecorder()
-	// handler := http.HandlerFunc(deleteProduct)
-
-	// handler.ServeHTTP(res, req)
-
-	// fillInventory()
-
-	// //res, err := http.Get(ts.URL + "/inventory/1")
-	// //defer res.Body.Close()
-
-	// var newInventory productInventory
-	// var oldInventory productInventory = inventory[0]
-	// resBody, err := ioutil.ReadAll(res.Body)
-	// json.Unmarshal(resBody, &newInventory)
-
-	// assert.Nil(t, err)
-	// assert.Equal(t, res.Code, http.StatusOK, "they should be equal")
-	// assert.Equal(t, newInventory, oldInventory, "they should be equal")
-	// assert.Equal(t, len(inventory), 1, "they should be equal")
+	assert.Equal(t, "The Product with ID 1 has been deleted successfully", string(resBody))
+	assert.Len(t, inventory, 1)
+	assert.Equal(t, http.StatusOK, res.Code)
+	assert.Equal(t, len(inventory), 1, "they should be equal")
 
 }
 
 func TestUpdateProduct(t *testing.T) {
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/inventory/{id}", updateProduct).Methods("PUT")
+	var newInventory productInventory
+	fillInventory()
 
-	ts := httptest.NewServer(router)
-	defer ts.Close()
-
+	// Define the updated data to be sent to the REST endpoint
 	payload := productInventory{
 		Product: product{
 			ID:    1,
-			Code:  "Code 1",
-			Name:  "Name 1",
-			Price: 15.42,
+			Code:  "Code",
+			Name:  "Name",
+			Price: 14,
 		},
-		Quantity: 1,
+		Quantity: 15,
 	}
-
 	data, err := json.Marshal(payload)
 
-	if err != nil {
-		fmt.Println(err)
+	// Create the router
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/inventory/{id}", updateProduct).Methods("PUT")
 
-	}
-
-	req := httptest.NewRequest("PUT", ts.URL+"/inventory/1", strings.NewReader(string(data)))
-
-	//q := req.URL.Query()
-	//q.Add("id", "1")
-	//req.URL.RawQuery = q.Encode()
-
+	// Create the request
+	req := httptest.NewRequest("PUT", "/inventory/1", strings.NewReader(string(data)))
 	res := httptest.NewRecorder()
-	handler := http.HandlerFunc(updateProduct)
+	router.ServeHTTP(res, req)
+	resBody, err := ioutil.ReadAll(res.Body)
+	unmarshalError := json.Unmarshal(resBody, &newInventory)
 
-	handler.ServeHTTP(res, req)
+	assert.NoError(t, err)
+	assert.NoError(t, unmarshalError)
+	assert.Equal(t, res.Code, http.StatusOK, "they should be equal")
+	assert.Equal(t, newInventory, inventory[0], "they should be equal")
+}
 
+func TestFailNoProductUpdateProduct(t *testing.T) {
+	var newInventory productInventory
 	fillInventory()
 
-	//res, err := http.Get(ts.URL + "/inventory/1")
-	//defer res.Body.Close()
+	// Define the updated data to be sent to the REST endpoint
+	payload := productInventory{
+		Quantity: 15,
+	}
+	data, err := json.Marshal(payload)
 
-	var newInventory productInventory
-	var oldInventory productInventory = inventory[0]
+	// Create the router
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/inventory/{id}", updateProduct).Methods("PUT")
+
+	// Create the request
+	req := httptest.NewRequest("PUT", "/inventory/1", strings.NewReader(string(data)))
+	res := httptest.NewRecorder()
+	router.ServeHTTP(res, req)
 	resBody, err := ioutil.ReadAll(res.Body)
-	json.Unmarshal(resBody, &newInventory)
+	unmarshalError := json.Unmarshal(resBody, &newInventory)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+	assert.NoError(t, unmarshalError)
+	assert.Equal(t, res.Code, http.StatusBadRequest, "they should be equal")
+	//assert.Equal(t, newInventory, inventory[0], "they should be equal")
+}
+
+func TestFailDifferentIDProductUpdateProduct(t *testing.T) {
+	var newInventory productInventory
+	fillInventory()
+
+	// Define the updated data to be sent to the REST endpoint
+	payload := productInventory{
+		Product: product{
+			ID:    2,
+			Code:  "Code",
+			Name:  "Name",
+			Price: 14,
+		},
+		Quantity: 15,
+	}
+	data, err := json.Marshal(payload)
+
+	// Create the router
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/inventory/{id}", updateProduct).Methods("PUT")
+
+	// Create the request
+	req := httptest.NewRequest("PUT", "/inventory/1", strings.NewReader(string(data)))
+	res := httptest.NewRecorder()
+	router.ServeHTTP(res, req)
+	resBody, err := ioutil.ReadAll(res.Body)
+	unmarshalError := json.Unmarshal(resBody, &newInventory)
+
+	assert.NoError(t, err)
+	assert.NoError(t, unmarshalError)
+	assert.Equal(t, res.Code, http.StatusBadRequest, "they should be equal")
+	//assert.Equal(t, newInventory, inventory[0], "they should be equal")
+}
+
+func TestPatchUpdateProduct(t *testing.T) {
+	var newInventory productInventory
+	fillInventory()
+
+	// Define the updated data to be sent to the REST endpoint
+	payload := productInventory{
+		Product: product{
+			ID:   1,
+			Code: "Code",
+		},
+		Quantity: 2,
+	}
+	data, err := json.Marshal(payload)
+
+	expected := productInventory{
+		Product: product{
+			ID:    1,
+			Code:  "Code",
+			Name:  "Name 1",
+			Price: 0,
+		},
+		Quantity: 2,
+	}
+
+	// Create the router
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/patch_inventory/{id}", updatePatchProduct).Methods("PATCH")
+
+	// Create the request
+	req := httptest.NewRequest("PATCH", "/patch_inventory/1", strings.NewReader(string(data)))
+	res := httptest.NewRecorder()
+	router.ServeHTTP(res, req)
+	resBody, err := ioutil.ReadAll(res.Body)
+	unmarshalError := json.Unmarshal(resBody, &newInventory)
+
+	assert.NoError(t, err)
+	assert.NoError(t, unmarshalError)
 	assert.Equal(t, res.Code, http.StatusOK, "they should be equal")
-	assert.Equal(t, newInventory, oldInventory, "they should be equal")
-
+	assert.Equal(t, expected, inventory[0], "they should be equal")
 }
