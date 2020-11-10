@@ -28,6 +28,18 @@ type productInventoryPatch struct {
 
 var inventory []productInventory
 
+func checkStruct(checkInventory productInventory) bool {
+	if checkInventory.Product.ID == 0 ||
+		checkInventory.Product.Code == "" ||
+		checkInventory.Product.Name == "" ||
+		checkInventory.Product.Price == 0 ||
+		checkInventory.Quantity == 0 {
+		return false
+	}
+
+	return true
+}
+
 func createProduct(w http.ResponseWriter, r *http.Request) {
 	var newInventory productInventory
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -42,10 +54,9 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if newInventory.Product.ID == 0 ||
-		newInventory.Product.Code == "" ||
-		newInventory.Product.Name == "" ||
-		newInventory.Product.Price == 0 {
+	// Check if all the data was sent
+	if !checkStruct(newInventory) {
+
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(newInventory)
 		return
@@ -57,8 +68,15 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 
 func getOneProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
+	intProductID, intError := strconv.Atoi(ProductID)
+
+	if intError != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Invalid number")
+		return
+	}
+
 	for _, singleInventoryProduct := range inventory {
-		intProductID, _ := strconv.Atoi(ProductID)
 		if singleInventoryProduct.Product.ID == int(intProductID) {
 			json.NewEncoder(w).Encode(singleInventoryProduct)
 			break
@@ -84,16 +102,20 @@ func updateProduct(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, err.Error())
 		return
 	}
-	if updatedInventory.Product.ID == 0 ||
-		updatedInventory.Product.Code == "" ||
-		updatedInventory.Product.Name == "" ||
-		updatedInventory.Product.Price == 0 {
-
+	// Check if all the data was sent
+	if !checkStruct(updatedInventory) {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(updatedInventory)
 		return
 	}
-	intProductID, _ := strconv.Atoi(ProductID)
+	intProductID, intError := strconv.Atoi(ProductID)
+
+	if intError != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Invalid number")
+		return
+	}
+
 	if updatedInventory.Product.ID != intProductID {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(updatedInventory)
@@ -107,9 +129,17 @@ func updateProduct(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
 func updatePatchProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
-	intProductID, _ := strconv.Atoi(ProductID)
+	intProductID, intError := strconv.Atoi(ProductID)
+
+	if intError != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Invalid number")
+		return
+	}
+
 	var updatedInventory productInventory
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -118,8 +148,8 @@ func updatePatchProduct(w http.ResponseWriter, r *http.Request) {
 	}
 	err = json.Unmarshal(reqBody, &updatedInventory)
 	if err != nil {
-		fmt.Fprintf(w, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, err.Error())
 		return
 	}
 	for i, singleInventoryProduct := range inventory {
@@ -145,7 +175,14 @@ func updatePatchProduct(w http.ResponseWriter, r *http.Request) {
 }
 func deleteProduct(w http.ResponseWriter, r *http.Request) {
 	ProductID := mux.Vars(r)["id"]
-	intProductID, _ := strconv.Atoi(ProductID)
+	intProductID, intError := strconv.Atoi(ProductID)
+
+	if intError != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Invalid number")
+		return
+	}
+
 	for i, singleInventoryProduct := range inventory {
 		if singleInventoryProduct.Product.ID == int(intProductID) {
 			inventory = append(inventory[:i], inventory[i+1:]...)

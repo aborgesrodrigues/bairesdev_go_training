@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,12 +13,7 @@ import (
 )
 
 func TestCreateProduct(t *testing.T) {
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/inventory/", createProduct).Methods("POST")
-
-	ts := httptest.NewServer(router)
-	defer ts.Close()
-
+	// Data
 	payload := productInventory{
 		Product: product{
 			ID:    1,
@@ -30,16 +24,22 @@ func TestCreateProduct(t *testing.T) {
 		Quantity: 1,
 	}
 
-	data, err := json.Marshal(payload)
+	data, marshalError := json.Marshal(payload)
 
-	if err != nil {
-		fmt.Println(err)
+	// Create the router
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/inventory/", createProduct).Methods("POST")
 
-	}
+	// Create the server
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	// Do the call to the service
 	res, err := http.Post(ts.URL+"/inventory/", "application/json", strings.NewReader(string(data)))
 	defer res.Body.Close()
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+	assert.NoError(t, marshalError)
 	assert.Equal(t, res.StatusCode, http.StatusCreated, "they should be equal")
 	assert.Equal(t, len(inventory), 1, "they should be equal")
 	assert.Equal(t, inventory[0].Product.ID, 1, "they should be equal")
@@ -47,40 +47,43 @@ func TestCreateProduct(t *testing.T) {
 }
 
 func TestFailCreateProduct(t *testing.T) {
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/inventory/", createProduct).Methods("POST")
-
-	ts := httptest.NewServer(router)
-	defer ts.Close()
-
+	// Data
 	payload := productInventory{
 		Quantity: 1,
 	}
+	data, marshalError := json.Marshal(payload)
 
-	data, err := json.Marshal(payload)
+	// Create the router
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/inventory/", createProduct).Methods("POST")
 
-	if err != nil {
-		fmt.Println(err)
+	// Create the server
+	ts := httptest.NewServer(router)
+	defer ts.Close()
 
-	}
+	// Do the call to the service
 	res, err := http.Post(ts.URL+"/inventory/", "application/json", strings.NewReader(string(data)))
 	defer res.Body.Close()
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+	assert.NoError(t, marshalError)
 	assert.Equal(t, res.StatusCode, http.StatusBadRequest, "they should be equal")
 	assert.Equal(t, len(inventory), 1, "they should be equal")
 
 }
 
 func TestGetOneProduct(t *testing.T) {
+	fillInventory()
+
+	// Create the router
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/inventory/{id}", getOneProduct).Methods("GET")
 
+	// Create the server
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	fillInventory()
-
+	// Do the call to the service
 	res, err := http.Get(ts.URL + "/inventory/1")
 	defer res.Body.Close()
 
@@ -91,6 +94,29 @@ func TestGetOneProduct(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, res.StatusCode, http.StatusOK, "they should be equal")
 	assert.Equal(t, newInventory, inventory[0], "they should be equal")
+}
+
+func TestFailGetOneProduct(t *testing.T) {
+	fillInventory()
+
+	// Create the router
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/inventory/{id}", getOneProduct).Methods("GET")
+
+	// Create the server
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	// Do the call to the service
+	res, err := http.Get(ts.URL + "/inventory/u")
+	defer res.Body.Close()
+
+	var newInventory productInventory
+	resBody, err := ioutil.ReadAll(res.Body)
+	json.Unmarshal(resBody, &newInventory)
+
+	assert.Nil(t, err)
+	assert.Equal(t, res.StatusCode, http.StatusBadRequest, "they should be equal")
 
 }
 
@@ -118,14 +144,17 @@ func fillInventory() {
 }
 
 func TestGetAllProducts(t *testing.T) {
+	fillInventory()
+
+	// Create the router
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/inventory", getAllProducts).Methods("GET")
 
-	fillInventory()
-
+	// Create the server
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
+	// Do the call to the service
 	res, err := http.Get(ts.URL + "/inventory")
 	defer res.Body.Close()
 
@@ -250,7 +279,6 @@ func TestFailDifferentIDProductUpdateProduct(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, unmarshalError)
 	assert.Equal(t, res.Code, http.StatusBadRequest, "they should be equal")
-	//assert.Equal(t, newInventory, inventory[0], "they should be equal")
 }
 
 func TestPatchUpdateProduct(t *testing.T) {

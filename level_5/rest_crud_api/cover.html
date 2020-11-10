@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_5/rest_crud_api/rest_crud_api.go (72.2%)</option>
+				<option value="file0">/home/alessandro/desenvolvimento/workspaces/golang/bairesdev_go_training/level_5/rest_crud_api/rest_crud_api.go (68.8%)</option>
 				
 				</select>
 			</div>
@@ -99,6 +99,18 @@ type productInventoryPatch struct {
 
 var inventory []productInventory
 
+func checkStruct(checkInventory productInventory) bool <span class="cov8" title="1">{
+        if checkInventory.Product.ID == 0 ||
+                checkInventory.Product.Code == "" ||
+                checkInventory.Product.Name == "" ||
+                checkInventory.Product.Price == 0 ||
+                checkInventory.Quantity == 0 </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">return true</span>
+}
+
 func createProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
         var newInventory productInventory
         reqBody, err := ioutil.ReadAll(r.Body)
@@ -113,10 +125,9 @@ func createProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" ti
                 w.WriteHeader(http.StatusBadRequest)
                 return
         }</span>
-        <span class="cov8" title="1">if newInventory.Product.ID == 0 ||
-                newInventory.Product.Code == "" ||
-                newInventory.Product.Name == "" ||
-                newInventory.Product.Price == 0 </span><span class="cov8" title="1">{
+        // Check if all the data was sent
+        <span class="cov8" title="1">if !checkStruct(newInventory) </span><span class="cov8" title="1">{
+
                 w.WriteHeader(http.StatusBadRequest)
                 json.NewEncoder(w).Encode(newInventory)
                 return
@@ -128,8 +139,15 @@ func createProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" ti
 
 func getOneProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
         ProductID := mux.Vars(r)["id"]
-        for _, singleInventoryProduct := range inventory </span><span class="cov8" title="1">{
-                intProductID, _ := strconv.Atoi(ProductID)
+        intProductID, intError := strconv.Atoi(ProductID)
+
+        if intError != nil </span><span class="cov8" title="1">{
+                w.WriteHeader(http.StatusBadRequest)
+                fmt.Fprintf(w, "Invalid number")
+                return
+        }</span>
+
+        <span class="cov8" title="1">for _, singleInventoryProduct := range inventory </span><span class="cov8" title="1">{
                 if singleInventoryProduct.Product.ID == int(intProductID) </span><span class="cov8" title="1">{
                         json.NewEncoder(w).Encode(singleInventoryProduct)
                         break</span>
@@ -155,17 +173,21 @@ func updateProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" ti
                 fmt.Fprintf(w, err.Error())
                 return
         }</span>
-        <span class="cov8" title="1">if updatedInventory.Product.ID == 0 ||
-                updatedInventory.Product.Code == "" ||
-                updatedInventory.Product.Name == "" ||
-                updatedInventory.Product.Price == 0 </span><span class="cov8" title="1">{
-
+        // Check if all the data was sent
+        <span class="cov8" title="1">if !checkStruct(updatedInventory) </span><span class="cov8" title="1">{
                 w.WriteHeader(http.StatusBadRequest)
                 json.NewEncoder(w).Encode(updatedInventory)
                 return
         }</span>
-        <span class="cov8" title="1">intProductID, _ := strconv.Atoi(ProductID)
-        if updatedInventory.Product.ID != intProductID </span><span class="cov8" title="1">{
+        <span class="cov8" title="1">intProductID, intError := strconv.Atoi(ProductID)
+
+        if intError != nil </span><span class="cov0" title="0">{
+                w.WriteHeader(http.StatusBadRequest)
+                fmt.Fprintf(w, "Invalid number")
+                return
+        }</span>
+
+        <span class="cov8" title="1">if updatedInventory.Product.ID != intProductID </span><span class="cov8" title="1">{
                 w.WriteHeader(http.StatusBadRequest)
                 json.NewEncoder(w).Encode(updatedInventory)
                 return
@@ -178,10 +200,18 @@ func updateProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" ti
                 }
         }
 }
+
 func updatePatchProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
         ProductID := mux.Vars(r)["id"]
-        intProductID, _ := strconv.Atoi(ProductID)
-        var updatedInventory productInventory
+        intProductID, intError := strconv.Atoi(ProductID)
+
+        if intError != nil </span><span class="cov0" title="0">{
+                w.WriteHeader(http.StatusBadRequest)
+                fmt.Fprintf(w, "Invalid number")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var updatedInventory productInventory
         reqBody, err := ioutil.ReadAll(r.Body)
         if err != nil </span><span class="cov0" title="0">{
                 fmt.Fprintf(w, "Kindly enter data with the Product title and description only in order to update")
@@ -189,8 +219,8 @@ func updatePatchProduct(w http.ResponseWriter, r *http.Request) <span class="cov
         }</span>
         <span class="cov8" title="1">err = json.Unmarshal(reqBody, &amp;updatedInventory)
         if err != nil </span><span class="cov0" title="0">{
-                fmt.Fprintf(w, err.Error())
                 w.WriteHeader(http.StatusBadRequest)
+                fmt.Fprintf(w, err.Error())
                 return
         }</span>
         <span class="cov8" title="1">for i, singleInventoryProduct := range inventory </span><span class="cov8" title="1">{
@@ -216,8 +246,15 @@ func updatePatchProduct(w http.ResponseWriter, r *http.Request) <span class="cov
 }
 func deleteProduct(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
         ProductID := mux.Vars(r)["id"]
-        intProductID, _ := strconv.Atoi(ProductID)
-        for i, singleInventoryProduct := range inventory </span><span class="cov8" title="1">{
+        intProductID, intError := strconv.Atoi(ProductID)
+
+        if intError != nil </span><span class="cov0" title="0">{
+                w.WriteHeader(http.StatusBadRequest)
+                fmt.Fprintf(w, "Invalid number")
+                return
+        }</span>
+
+        <span class="cov8" title="1">for i, singleInventoryProduct := range inventory </span><span class="cov8" title="1">{
                 if singleInventoryProduct.Product.ID == int(intProductID) </span><span class="cov8" title="1">{
                         inventory = append(inventory[:i], inventory[i+1:]...)
                         fmt.Fprintf(w, "The Product with ID %v has been deleted successfully", ProductID)
